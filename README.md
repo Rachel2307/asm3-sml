@@ -1,55 +1,112 @@
-# Character-Level Transformer Language Model - Bigram Language Model
+# **Assignment 3 – Question 5: RNN vs Transformer Language Model**
 
-This repository contains an implementation of a Bigram Language Model using a transformer architecture. This character-level language model aims to predict the next character in a sequence given the previous characters. The model is built and trained using the PyTorch library.
+## Overview
 
-## Dependencies
+This assignment implements and compares two neural language models trained on the same dataset using **Byte Pair Encoding (BPE)** tokenization:
 
-To run the notebook, you'll need the following Python libraries:
+1. **RNN-based model** – implemented with an **LSTM** layer
+2. **Transformer-based model** – using multi-head self-attention blocks
 
-- PyTorch
-- Torchvision
-- Torchaudio
+The goal is to evaluate how both models perform on a small text corpus (Shakespeare dataset) in terms of training behavior, convergence, and loss.
 
-The code is designed to utilize a GPU if available. If not, it will default to a CPU.
+---
 
-## Data
+## Project Structure
 
-The model is trained on a text file containing the works of Shakespeare. The text is loaded from the file as a long string. The unique characters in the text are identified, and a mapping from characters to integers (and vice versa) is created. This mapping is used to encode the text into a format that the model can understand.
+```
+Assignment3_Q5/
+│
+├── tokenizer_bpe.py                 # BPE tokenizer using tiktoken (vocab = 10,000)
+├── char_transformer_language_model.py  # Trains LSTM and Transformer models
+├── input.txt                        # Shakespeare text dataset
+├── report.pdf                       # Short analytical report
+└── README.md                        # (this file)
+```
 
-The data is then split into a training set (90% of the data) and a validation set (10% of the data). The training set is used to train the model, and the validation set is used to monitor the model's performance during training.
+---
 
-## Model
+## Requirements
 
-The transformer model consists of several key components, each implemented as a separate Python class:
+You need **Python 3.10+** and the following libraries:
 
-- **Head**: This class represents a single head of the self-attention mechanism. It computes attention scores and performs the weighted aggregation of values.
+```bash
+pip install torch torchvision torchaudio tiktoken
+```
+---
 
-- **MultiHeadAttention**: This class manages multiple instances of the `Head` class in parallel, allowing the model to capture different types of information from the input data.
+## How to Run
 
-- **FeedForward**: This class represents a feed-forward network that consists of a simple linear layer followed by a ReLU non-linearity.
+### **Step 1 – Tokenize the Dataset**
 
-- **TransformerBlock**: Each Transformer Block contains a self-attention mechanism followed by a feed-forward network.
+Run the BPE tokenizer:
 
-- **BigramLanguageModel**: This class represents the main model. It includes an embedding layer, a series of transformer blocks, a layer normalization layer, and a final linear layer.
+```bash
+python tokenizer_bpe.py
+```
 
-## Training
+This will:
 
-The model is trained using the AdamW optimizer with a learning rate of 3e-4. The training process involves forward propagation, loss computation, backpropagation, and parameter update steps. The cross-entropy loss function is used to calculate the loss between the model's predictions and the actual characters. The training and validation losses are printed out every 500 iterations, allowing you to monitor the model's progress during training. 
+* Load `input.txt`
+* Encode it using GPT-2’s BPE vocabulary (size = 10,000)
+* Save the encoded data as `bpe_tokens.pt`
 
-After training, the model's state is saved to a file for future use.
+---
 
-## Text Generation
+### **Step 2 – Train Both Models**
 
-Once trained, the model can be used to generate new text. The model takes a sequence of characters (the context) and generates the next character. This process is repeated to generate a sequence of new characters.
+Run the main training script:
 
-## Usage
+```bash
+python char_transformer_language_model.py
+```
 
-You can run the provided Jupyter notebook to train the model and generate new text. The hyperparameters can be adjusted to fine-tune the model's performance and the amount of text generated.
+This script:
 
-## Future Work
+* Loads the same tokenized dataset for both models
+* Trains the **LSTM** first, then the **Transformer**
+* Prints training progress and final validation losses
 
-Improvements to the model could include adjusting the hyperparameters, adding more transformer blocks, training on a larger dataset, or training for more iterations. 
+Example output:
 
-## License
+```
+Training LSTM...
+LSTM Step 0, loss: 10.83
+...
+Training Transformer...
+Transformer Step 800, loss: 5.37
+Final Validation Loss — LSTM: 5.18, Transformer: 5.26
+```
 
-This project is open source and available under the [MIT License](LICENSE).
+If the losses drop steadily, your implementation is correct.
+
+---
+
+### **Step 3 – View the Report**
+
+Read `report.txt` (or upload as PDF).
+It explains:
+
+* Model setup
+* Training results
+* Performance comparison
+* Analysis and conclusion
+
+---
+
+## Summary of Findings
+
+| Model           | Strengths                                                               | Limitations                            |
+| --------------- | ----------------------------------------------------------------------- | -------------------------------------- |
+| **LSTM (RNN)**  | Fast training, good for small data, lower memory use                    | Struggles with long-range dependencies |
+| **Transformer** | Captures long-term context, parallel training, smoother text generation | Higher memory cost, slower on CPU      |
+
+Final validation losses were around **5.2–5.3**, confirming successful convergence.
+
+---
+
+## Notes
+
+* Both models use **AdamW optimizer** and **cross-entropy loss**.
+* Batch size = 16, block size = 64, learning rate = 3e-4.
+* The entire pipeline runs on CPU or GPU automatically.
+
